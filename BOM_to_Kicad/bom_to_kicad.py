@@ -31,7 +31,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--overwrite", action="store_true", help="Sovrascrivi i file esistenti")
     parser.add_argument("--3d", dest="model3d", action="store_true", help="Scarica solo il modello 3D") # Per compatibilità con easyeda2kicad
     parser.add_argument("--output", action="store", type=str, help="Imposta la directory di output (default: ~/libs/my_lib per i simboli e ~/libs/footprints per i footprint)")
-    parser.add_argument("--single-component", default=True, type=bool, help="Consente di scaricare un singolo componente LCSC specificato da riga di comando")
+    parser.add_argument("--single-component", action="store_true", default=True, type=bool, help="Consente di scaricare un singolo componente LCSC specificato da riga di comando")
 
     return parser.parse_args()
 
@@ -196,7 +196,6 @@ def main():
                 return
             parts = [part_number]
             print(f"📦 Componente da scaricare: {part_number}")
-
         elif args.bom and not args.single_component:
 
             bom_path = None
