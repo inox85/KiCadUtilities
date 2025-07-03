@@ -31,6 +31,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--overwrite", action="store_true", help="Sovrascrivi i file esistenti")
     parser.add_argument("--3d", dest="model3d", action="store_true", help="Scarica solo il modello 3D") # Per compatibilità con easyeda2kicad
     parser.add_argument("--output", action="store", type=str, help="Imposta la directory di output (default: ~/libs/my_lib per i simboli e ~/libs/footprints per i footprint)")
+    parser.add_argument("--single-component", default=True, type=bool, help="Consente di scaricare un singolo componente LCSC specificato da riga di comando")
 
     return parser.parse_args()
 
@@ -94,10 +95,12 @@ def read_csv(file_path: str, delimiter: str = "auto") -> pd.DataFrame:
     
     raise ValueError("Impossibile leggere il file con gli encoding supportati (UTF-8, Windows-1252)")
 
-def extract_lcsc_parts(bom_path: str, delimiter: str, column_name: str, sheet_name: str = None) -> List[str]:
+def extract_lcsc_parts(bom_path: str, delimiter: str, column_name: str, sheet_name: str = None, single_component: bool = False) -> List[str]:
     """
     Estrae i codici LCSC dalla BOM (CSV o Excel).
     """
+
+    
     file_type = detect_file_type(bom_path)
     
     try:
@@ -142,7 +145,7 @@ def build_easyeda2kicad_args(args: argparse.Namespace) -> List[str]:
         cli_args.append("--symbol")
     elif args.footprint:
         cli_args.append("--footprint")
-    if args.model3d:
+    elif args.model3d:
         cli_args.append("--3d")
     else:
         cli_args.append("--full")
@@ -184,24 +187,36 @@ def main():
     args = parse_arguments()
     
     try:
-        bom_path = None
-        if args.bom:
-            bom_path = os.path.abspath(args.bom)
-            if not os.path.exists(bom_path):
-                raise FileNotFoundError(f"File BOM non trovato: {bom_path}")
-        else:
-            bom_path = str(input("Inserisci il percorso al file BOM (CSV o Excel): ").strip())
-            print(f"📂 Percorso BOM: {bom_path}")
-            if not bom_path:
-                print("❌ Percorso BOM non fornito. Uscita.")
+        parts = []
+        
+        if not args.bom and args.single_component:
+            part_number = input("Inserisci il codice LCSC del componente da scaricare: ").strip()
+            if not part_number:
+                print("❌ Codice LCSC non fornito. Uscita.")
                 return
+            parts = [part_number]
+            print(f"📦 Componente da scaricare: {part_number}")
 
-        parts = extract_lcsc_parts(
-            bom_path,
-            args.delimiter,
-            args.column,
-            args.sheet_name
-        )
+        elif args.bom and not args.single_component:
+
+            bom_path = None
+            if args.bom:
+                bom_path = os.path.abspath(args.bom)
+                if not os.path.exists(bom_path):
+                    raise FileNotFoundError(f"File BOM non trovato: {bom_path}")
+            else:
+                bom_path = str(input("Inserisci il percorso al file BOM (CSV o Excel): ").strip())
+                print(f"📂 Percorso BOM: {bom_path}")
+                if not bom_path:
+                    print("❌ Percorso BOM non fornito. Uscita.")
+                    return
+
+            parts = extract_lcsc_parts(
+                bom_path,
+                args.delimiter,
+                args.column,
+                args.sheet_name
+            )
         
         if not parts:
             print("⚠️ Nessun codice LCSC trovato nella BOM")
