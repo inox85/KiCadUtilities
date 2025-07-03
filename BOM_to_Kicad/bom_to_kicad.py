@@ -21,7 +21,7 @@ def parse_arguments() -> argparse.Namespace:
                "  ./bom_to_kicad.py --bom BOM.xlsx --sheet_name 'Elenco componenti'\n"
                "  ./bom_to_kicad.py --bom BOM.csv --column 'LCSC' --full"
     )
-    parser.add_argument("--bom", required=True, help="Percorso al file BOM (CSV o Excel)")
+    parser.add_argument("--bom", help="Percorso al file BOM (CSV o Excel)")
     parser.add_argument("--delimiter", default="auto", help="Separatore per CSV (default: rilevamento automatico)")
     parser.add_argument("--sheet_name", default=None, help="Nome del foglio Excel (per file XLSX)")
     parser.add_argument("--column", default="Supplier Part", help="Nome colonna con codice LCSC (default: 'Supplier Part')")
@@ -184,8 +184,20 @@ def main():
     args = parse_arguments()
     
     try:
+        bom_path = None
+        if args.bom:
+            bom_path = os.path.abspath(args.bom)
+            if not os.path.exists(bom_path):
+                raise FileNotFoundError(f"File BOM non trovato: {bom_path}")
+        else:
+            bom_path = str(input("Inserisci il percorso al file BOM (CSV o Excel): ").strip())
+            print(f"📂 Percorso BOM: {bom_path}")
+            if not bom_path:
+                print("❌ Percorso BOM non fornito. Uscita.")
+                return
+
         parts = extract_lcsc_parts(
-            args.bom,
+            bom_path,
             args.delimiter,
             args.column,
             args.sheet_name
