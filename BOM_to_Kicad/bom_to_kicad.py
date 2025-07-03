@@ -28,7 +28,9 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--full", action="store_true", help="Scarica simbolo, footprint e 3D")
     parser.add_argument("--symbol", action="store_true", help="Scarica solo il simbolo")
     parser.add_argument("--footprint", action="store_true", help="Scarica solo il footprint")
+    parser.add_argument("--overwrite", action="store_true", help="Sovrascrivi i file esistenti")
     parser.add_argument("--3d", dest="model3d", action="store_true", help="Scarica solo il modello 3D")
+
     return parser.parse_args()
 
 def detect_file_type(file_path: str) -> str:
@@ -129,18 +131,24 @@ def extract_lcsc_parts(bom_path: str, delimiter: str, column_name: str, sheet_na
     return sorted(parts)
 
 def build_easyeda2kicad_args(args: argparse.Namespace) -> List[str]:
-    """Costruisce gli argomenti per easyeda2kicad."""
-    if args.full:
-        return ["--full"]
+    """Costruisce gli argomenti per easyeda2kicad."""  
     
     cli_args = []
-    if args.symbol:
+
+    if args.full:
+        cli_args.append("--full")
+    elif args.symbol:
         cli_args.append("--symbol")
-    if args.footprint:
+    elif args.footprint:
         cli_args.append("--footprint")
     if args.model3d:
         cli_args.append("--3d")
+    else:
+        cli_args.append("--full")
     
+    if args.overwrite:
+        cli_args.append("--overwrite")
+
     return cli_args if cli_args else ["--full"]
 
 def download_component(part_number: str, easyeda_args: List[str]) -> bool:
