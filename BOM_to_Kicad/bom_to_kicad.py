@@ -30,8 +30,8 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--footprint", action="store_true", help="Scarica solo il footprint")
     parser.add_argument("--overwrite", action="store_true", help="Sovrascrivi i file esistenti")
     parser.add_argument("--3d", dest="model3d", action="store_true", help="Scarica solo il modello 3D") # Per compatibilità con easyeda2kicad
-    parser.add_argument("--output", action="store", type=str, help="Imposta la directory di output (default: ~/libs/my_lib per i simboli e ~/libs/footprints per i footprint)")
-    parser.add_argument("--single-component", action="store_true", default=True, type=bool, help="Consente di scaricare un singolo componente LCSC specificato da riga di comando")
+    #parser.add_argument("--output", action="store", type=str, help="Imposta la directory di output (default: ~/libs/my_lib per i simboli e ~/libs/footprints per i footprint)")
+    parser.add_argument("--single-component", action="store_true", default=False, help="Consente di scaricare un singolo componente LCSC specificato da riga di comando")
 
     return parser.parse_args()
 
@@ -153,11 +153,11 @@ def build_easyeda2kicad_args(args: argparse.Namespace) -> List[str]:
     if args.overwrite:
         cli_args.append("--overwrite")
     
-    if args.output:
-        output_dir = os.path.abspath(args.output)
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-        cli_args.append(f"--output={output_dir}")
+    # if args.output:
+    #     output_dir = os.path.abspath(args.output)
+    #     if not os.path.exists(output_dir):
+    #         os.makedirs(output_dir)
+    #     cli_args.append(f"--output={output_dir}")
 
     return cli_args if cli_args else ["--full"]
 
